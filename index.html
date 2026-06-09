@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#2e7d32" />
+  <title>戒菸衛教小遊戲｜番路鄉衛生所</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --g-dark:   #1b5e20;
+      --g-mid:    #2e7d32;
+      --g-light:  #4caf50;
+      --g-bg:     #e8f5e9;
+      --b-bg:     #e3f2fd;
+      --orange:   #f57c00;
+      --red:      #c62828;
+      --gray:     #757575;
+      --text:     #212121;
+    }
+
+    body {
+      font-family: -apple-system, 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+      background: linear-gradient(160deg, var(--g-bg) 0%, var(--b-bg) 100%);
+      min-height: 100dvh;
+      color: var(--text);
+    }
+
+    /* ── Screens ── */
+    .screen {
+      display: none;
+      min-height: 100dvh;
+      padding: 24px 16px 40px;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+    .screen.active { display: flex; animation: fadeIn .3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Logo ── */
+    .logo { text-align: center; }
+    .logo-icon { font-size: 3rem; display: block; }
+    .logo-org  { font-size: 1.05rem; font-weight: 700; color: var(--g-mid); margin-top: 2px; }
+    .logo-sub  { font-size: .85rem; color: var(--gray); }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 24px 20px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.07);
+    }
+    .card-title { font-size: 1.5rem; font-weight: 800; color: var(--g-dark); line-height: 1.3; text-align: center; }
+    .card-sub   { font-size: 1rem; color: var(--gray); text-align: center; line-height: 1.6; margin-top: 6px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: block; width: 100%; max-width: 320px;
+      padding: 16px 24px; border: none; border-radius: 50px;
+      font-size: 1.1rem; font-weight: 700; cursor: pointer;
+      letter-spacing: 1px; transition: transform .1s, box-shadow .1s;
+      font-family: inherit;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-green {
+      background: linear-gradient(135deg, var(--g-light), var(--g-mid));
+      color: #fff; box-shadow: 0 4px 14px rgba(46,125,50,.3);
+    }
+    .btn-outline {
+      background: #fff; color: var(--g-mid);
+      border: 2px solid var(--g-light);
+    }
+
+    /* ── Intro features ── */
+    .features { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    .feature {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--g-bg); padding: 12px 14px; border-radius: 12px;
+    }
+    .feature-icon { font-size: 1.8rem; }
+    .feature-text { font-size: .95rem; color: var(--text); }
+    .feature-text strong { color: var(--g-dark); }
+
+    /* ── HUD ── */
+    .hud {
+      width: 100%; max-width: 420px;
+      display: flex; justify-content: space-between; gap: 12px;
+    }
+    .hud-box {
+      flex: 1; background: #fff; border-radius: 14px;
+      padding: 10px 16px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    }
+    .hud-label { font-size: .75rem; color: var(--gray); }
+    .hud-val   { font-size: 1.8rem; font-weight: 900; color: var(--g-mid); line-height: 1.2; }
+    .hud-val.warn { color: var(--red); animation: blink .5s infinite; }
+
+    @keyframes blink { 0%,100%{ opacity:1 } 50%{ opacity:.4 } }
+
+    /* ── Game Arena ── */
+    #arena {
+      width: 100%; max-width: 420px;
+      height: 52vh; min-height: 260px;
+      background: #fff; border-radius: 20px; position: relative;
+      overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,.09);
+      border: 2px solid var(--g-bg);
+    }
+    .cig {
+      position: absolute; font-size: 2.6rem; cursor: pointer;
+      user-select: none; line-height: 1;
+      animation: pop-in .2s ease;
+      transition: transform .08s;
+    }
+    .cig:active { transform: scale(1.4); }
+    .cig.hit { animation: pop-out .22s ease forwards; pointer-events: none; }
+
+    @keyframes pop-in  { from{opacity:0;transform:scale(.4)} to{opacity:1;transform:scale(1)} }
+    @keyframes pop-out { 0%{opacity:1;transform:scale(1)} 60%{transform:scale(1.5)} 100%{opacity:0;transform:scale(0)} }
+
+    /* ── Progress ── */
+    .progress-wrap { width:100%; max-width:420px; height:8px; background:rgba(0,0,0,.08); border-radius:4px; overflow:hidden; }
+    .progress-fill { height:100%; background:var(--g-light); border-radius:4px; transition:width .3s; }
+
+    /* ── Timeline ── */
+    .timeline { display:flex; flex-direction:column; gap:10px; }
+    .tl-row  { display:flex; align-items:flex-start; gap:10px; }
+    .tl-time {
+      background: var(--g-mid); color:#fff;
+      border-radius:8px; padding:4px 10px;
+      font-size:.78rem; font-weight:700; white-space:nowrap; flex-shrink:0;
+    }
+    .tl-desc { font-size:.9rem; color:var(--text); line-height:1.5; padding-top:3px; }
+
+    /* ── Quiz ── */
+    .q-counter { font-size:.82rem; color:var(--gray); text-align:right; margin-bottom:6px; }
+    .q-text    { font-size:1.1rem; font-weight:700; color:var(--g-dark); line-height:1.5; margin-bottom:16px; }
+    .q-opts    { display:flex; flex-direction:column; gap:10px; }
+    .opt {
+      padding:14px 16px; border:2px solid #e0e0e0; border-radius:12px;
+      background:#fff; font-size:1rem; text-align:left; cursor:pointer;
+      line-height:1.4; transition:all .18s; font-family:inherit;
+    }
+    .opt:active  { transform:scale(.98); }
+    .opt.correct { border-color:var(--g-light); background:var(--g-bg); color:var(--g-dark); font-weight:700; }
+    .opt.wrong   { border-color:#ef9a9a; background:#ffebee; color:var(--red); }
+    .opt:disabled { cursor:default; }
+    .q-fact {
+      display:none; margin-top:14px;
+      background:var(--g-bg); border-left:4px solid var(--g-mid);
+      border-radius:8px; padding:12px 14px;
+      font-size:.9rem; font-weight:600; color:var(--g-dark);
+      line-height:1.5;
+    }
+
+    /* ── Result ── */
+    .score-num  { font-size:4rem; font-weight:900; color:var(--g-mid); line-height:1; }
+    .score-sub  { font-size:.85rem; color:var(--gray); margin-top:2px; }
+    .badge-icon { font-size:4rem; display:block; margin:6px 0; }
+    .badge-name { font-size:1.1rem; font-weight:700; color:var(--orange); }
+
+    /* ── Pledge ── */
+    .pledge-input {
+      width:100%; padding:14px 16px; border:2px solid #e0e0e0;
+      border-radius:12px; font-size:1.1rem; text-align:center;
+      outline:none; transition:border-color .2s; font-family:inherit;
+    }
+    .pledge-input:focus { border-color:var(--g-light); }
+
+    .pledge-card {
+      background: linear-gradient(135deg, #e8f5e9, #e3f2fd);
+      border:2px solid var(--g-light); border-radius:16px;
+      padding:22px 18px; text-align:center; margin-top:10px;
+    }
+    .pc-org    { font-size:.78rem; color:var(--g-mid); font-weight:700; letter-spacing:1px; }
+    .pc-title  { font-size:.85rem; color:var(--gray); margin-top:4px; }
+    .pc-name   { font-size:1.5rem; font-weight:900; color:var(--g-dark); margin:8px 0 4px; }
+    .pc-body   { font-size:.95rem; color:var(--text); line-height:1.8; }
+    .pc-date   { font-size:.8rem; color:var(--gray); margin-top:10px; }
+    .pc-hint   { font-size:.78rem; color:var(--gray); text-align:center; margin-top:6px; }
+
+    /* ── Resources ── */
+    .resources {
+      width:100%; max-width:420px;
+      background:#fff; border-radius:16px; padding:20px;
+      box-shadow:0 2px 12px rgba(0,0,0,.06);
+    }
+    .res-title {
+      font-size:.82rem; font-weight:700; color:var(--gray);
+      text-transform:uppercase; letter-spacing:1.5px;
+      text-align:center; margin-bottom:14px;
+    }
+    .res-item  { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid #f5f5f5; }
+    .res-item:last-child { border-bottom:none; }
+    .res-icon  { font-size:1.5rem; flex-shrink:0; padding-top:2px; }
+    .res-name  { font-size:.95rem; font-weight:700; color:var(--text); }
+    .res-detail{ font-size:.85rem; color:var(--gray); margin-top:3px; line-height:1.6; }
+    .res-phone { font-size:1.25rem; font-weight:900; color:var(--g-mid); }
+
+    /* ── Confetti ── */
+    .confetti-wrap { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; }
+    .cf {
+      position:absolute; border-radius:3px;
+      animation: cf-fall linear forwards;
+    }
+    @keyframes cf-fall {
+      from { transform:translateY(-30px) rotate(0deg); opacity:1; }
+      to   { transform:translateY(105vh) rotate(720deg); opacity:0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     Screen 1 : 開場
+══════════════════════════════════════ -->
+<div class="screen active" id="s-intro">
+
+  <div class="logo">
+    <span class="logo-icon">🫁</span>
+    <div class="logo-org">嘉義縣番路鄉衛生所</div>
+    <div class="logo-sub">戒菸衛教宣導活動</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">拒菸小勇士<br>挑戰開始！</div>
+    <div class="card-sub">完成遊戲、學習戒菸知識<br>守護你和家人的健康 💚</div>
+
+    <div class="features" style="margin-top:18px">
+      <div class="feature">
+        <span class="feature-icon">🚬</span>
+        <span class="feature-text"><strong>關卡一</strong>：點擊打倒香菸魔！（30 秒）</span>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">❓</span>
+        <span class="feature-text"><strong>關卡二</strong>：戒菸知識小挑戰（4 題）</span>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🏆</span>
+        <span class="feature-text"><strong>完成後</strong>：獲得專屬徽章 + 承諾卡</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-green" onclick="go('s-level1'); startLevel1()">
+    🎮 開始遊戲！
+  </button>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     Screen 2 : 關卡一（打香菸）
+══════════════════════════════════════ -->
+<div class="screen" id="s-level1">
+
+  <div class="logo" style="gap:2px">
+    <span class="logo-icon" style="font-size:2rem">🚬</span>
+    <div class="logo-org">關卡一：打倒香菸魔！</div>
+    <div class="logo-sub">點擊香菸消滅它，保護你的肺！</div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-box">
+      <div class="hud-label">消滅香菸</div>
+      <div class="hud-val" id="l1-score">0</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-label">剩餘時間</div>
+      <div class="hud-val" id="l1-timer">30</div>
+    </div>
+  </div>
+
+  <div id="arena"></div>
+
+  <p style="font-size:.85rem;color:var(--gray);text-align:center">
+    💡 快速點擊消滅更多香菸！
+  </p>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     Screen 3 : 中場健康知識
+══════════════════════════════════════ -->
+<div class="screen" id="s-fact">
+
+  <div class="logo">
+    <span class="logo-icon">✅</span>
+    <div class="logo-org">關卡一完成！</div>
+    <div class="logo-sub">共消滅了 <strong id="fact-count" style="color:var(--g-mid)">0</strong> 根香菸</div>
+  </div>
+
+  <div class="card" style="max-width:420px">
+    <div class="card-title" style="font-size:1.2rem;margin-bottom:16px">
+      🫁 戒菸後，身體這樣恢復
+    </div>
+    <div class="timeline">
+      <div class="tl-row"><span class="tl-time">20 分鐘</span><span class="tl-desc">血壓和心跳恢復正常範圍</span></div>
+      <div class="tl-row"><span class="tl-time">8 小時</span><span class="tl-desc">血液含氧量回升至正常水準</span></div>
+      <div class="tl-row"><span class="tl-time">24 小時</span><span class="tl-desc">心臟病發作風險開始下降</span></div>
+      <div class="tl-row"><span class="tl-time">48 小時</span><span class="tl-desc">嗅覺與味覺開始逐漸恢復</span></div>
+      <div class="tl-row"><span class="tl-time">1 個月</span><span class="tl-desc">呼吸更順暢、體力明顯改善</span></div>
+      <div class="tl-row"><span class="tl-time">1 年後</span><span class="tl-desc">🎉 罹患冠心病風險降低一半！</span></div>
+    </div>
+  </div>
+
+  <button class="btn btn-green" onclick="go('s-quiz'); startQuiz()">
+    ❓ 進入關卡二
+  </button>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     Screen 4 : 關卡二（問答）
+══════════════════════════════════════ -->
+<div class="screen" id="s-quiz">
+
+  <div class="logo" style="gap:2px">
+    <span class="logo-icon" style="font-size:2rem">❓</span>
+    <div class="logo-org">關卡二：戒菸知識挑戰</div>
+    <div class="logo-sub">選出正確答案獲得分數！</div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
+
+  <div class="card" style="max-width:420px">
+    <div class="q-counter" id="q-counter">第 1 題 / 共 4 題</div>
+    <div class="q-text"    id="q-text"></div>
+    <div class="q-opts"    id="q-opts"></div>
+    <div class="q-fact"    id="q-fact"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     Screen 5 : 結果頁
+══════════════════════════════════════ -->
+<div class="screen" id="s-result">
+
+  <div class="logo">
+    <span class="logo-icon">🏆</span>
+    <div class="logo-org">遊戲完成！</div>
+  </div>
+
+  <!-- 徽章與分數 -->
+  <div class="card" style="max-width:420px;text-align:center">
+    <span class="badge-icon" id="r-badge">🥇</span>
+    <div class="badge-name"  id="r-badge-name">戒菸小英雄</div>
+    <div class="score-num"   id="r-score">0</div>
+    <div class="score-sub">總分</div>
+    <p style="font-size:.9rem;color:var(--gray);margin-top:10px;line-height:1.6" id="r-msg"></p>
+  </div>
+
+  <!-- 承諾卡 -->
+  <div class="card" style="max-width:420px">
+    <div class="card-title" style="font-size:1.1rem;text-align:left;margin-bottom:12px">
+      📝 立下你的戒菸承諾
+    </div>
+    <input
+      id="pledge-input"
+      class="pledge-input"
+      type="text"
+      placeholder="輸入你的名字"
+      maxlength="10"
+      oninput="updatePledge()"
+    />
+
+    <div class="pledge-card" id="pledge-card">
+      <div class="pc-org">嘉義縣番路鄉衛生所</div>
+      <div class="pc-title">✨ 戒菸承諾書 ✨</div>
+      <div class="pc-name" id="pc-name">（你的名字）</div>
+      <div class="pc-body">我願意為了自己和家人的健康<br>努力戒菸，邁向健康的新生活</div>
+      <div class="pc-date" id="pc-date"></div>
+    </div>
+    <div class="pc-hint">📸 截圖保存你的承諾卡！</div>
+  </div>
+
+  <!-- 戒菸資源 -->
+  <div class="resources">
+    <div class="res-title">📞 戒菸資源</div>
+    <div class="res-item">
+      <span class="res-icon">📱</span>
+      <div>
+        <div class="res-name">國健署免費戒菸專線</div>
+        <div class="res-detail">
+          <span class="res-phone">0800-63-63-63</span><br>
+          週一至週五　09:00 – 21:00　免費撥打
+        </div>
+      </div>
+    </div>
+    <div class="res-item">
+      <span class="res-icon">🏥</span>
+      <div>
+        <div class="res-name">番路鄉衛生所　戒菸門診</div>
+        <div class="res-detail">
+          電話：(05) 259-1148<br>
+          地址：嘉義縣番路鄉下坑村 2 鄰 60 號<br>
+          門診時間：請來電詢問預約
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-outline" onclick="restartGame()" style="margin-top:4px">
+    🔄 再玩一次
+  </button>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     JavaScript
+══════════════════════════════════════ -->
+<script>
+// ── State ──────────────────────────────
+const G = {
+  l1Score: 0,
+  quizScore: 0,
+  currentQ: 0,
+  timerInterval: null,
+  spawnInterval: null,
+  timeLeft: 30
+};
+
+// ── Quiz Data ──────────────────────────
+const QUIZ = [
+  {
+    q:  '戒菸後幾分鐘，心跳和血壓就會開始恢復正常？',
+    opts: ['20 分鐘', '8 小時', '1 天'],
+    ans: 0,
+    fact: '✅ 正確！戒菸後僅 20 分鐘，血壓與心跳就會下降到接近正常值。'
+  },
+  {
+    q:  '台灣衛生福利部的免費戒菸諮詢專線是哪個號碼？',
+    opts: ['0800-22-5995', '0800-63-63-63', '1925'],
+    ans: 1,
+    fact: '✅ 正確！0800-63-63-63，週一至週五白天至晚上都可免費撥打。'
+  },
+  {
+    q:  '長期吸菸最主要會增加哪類疾病的風險？',
+    opts: ['肺癌、心臟病、中風', '近視、骨質疏鬆', '感冒、腸胃炎'],
+    ans: 0,
+    fact: '✅ 正確！吸菸是肺癌、心臟病與中風的重要危險因子，戒菸就是保命！'
+  },
+  {
+    q:  '戒菸滿 1 年後，罹患冠心病的風險大約會如何變化？',
+    opts: ['風險完全消除', '風險降低一半', '沒有明顯改變'],
+    ans: 1,
+    fact: '✅ 正確！戒菸 1 年後冠心病風險降低約 50%，越早開始越好！'
+  }
+];
+
+// ── Navigation ────────────────────────
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── Level 1 ───────────────────────────
+function startLevel1() {
+  G.l1Score   = 0;
+  G.timeLeft  = 30;
+  clearInterval(G.timerInterval);
+  clearInterval(G.spawnInterval);
+
+  const arena = document.getElementById('arena');
+  const tv    = document.getElementById('l1-timer');
+  const sv    = document.getElementById('l1-score');
+
+  arena.innerHTML = '';
+  tv.textContent  = '30';
+  tv.classList.remove('warn');
+  sv.textContent  = '0';
+
+  G.spawnInterval = setInterval(spawnCig, 900);
+
+  G.timerInterval = setInterval(() => {
+    G.timeLeft--;
+    tv.textContent = G.timeLeft;
+    if (G.timeLeft <= 10) tv.classList.add('warn');
+    if (G.timeLeft <= 0) {
+      clearInterval(G.timerInterval);
+      clearInterval(G.spawnInterval);
+      arena.innerHTML = '';
+      document.getElementById('fact-count').textContent = G.l1Score;
+      go('s-fact');
+    }
+  }, 1000);
+}
+
+function spawnCig() {
+  const arena = document.getElementById('arena');
+  if (!arena || arena.querySelectorAll('.cig:not(.hit)').length >= 9) return;
+
+  const el = document.createElement('div');
+  el.className = 'cig';
+  el.textContent = '🚬';
+
+  const maxX = arena.clientWidth  - 54;
+  const maxY = arena.clientHeight - 54;
+  el.style.left = Math.max(6, Math.random() * maxX) + 'px';
+  el.style.top  = Math.max(6, Math.random() * maxY) + 'px';
+
+  el.addEventListener('click', () => {
+    if (el.classList.contains('hit')) return;
+    el.classList.add('hit');
+    G.l1Score++;
+    document.getElementById('l1-score').textContent = G.l1Score;
+    setTimeout(() => el.remove(), 230);
+  });
+
+  arena.appendChild(el);
+  setTimeout(() => { if (!el.classList.contains('hit')) el.remove(); }, 2800);
+}
+
+// ── Quiz ──────────────────────────────
+function startQuiz() {
+  G.quizScore = 0;
+  G.currentQ  = 0;
+  renderQ();
+}
+
+function renderQ() {
+  const q   = QUIZ[G.currentQ];
+  const tot = QUIZ.length;
+
+  document.getElementById('q-counter').textContent  = `第 ${G.currentQ + 1} 題 / 共 ${tot} 題`;
+  document.getElementById('q-progress').style.width = `${(G.currentQ / tot) * 100}%`;
+  document.getElementById('q-text').textContent     = q.q;
+
+  const factEl = document.getElementById('q-fact');
+  factEl.style.display = 'none';
+  factEl.textContent   = '';
+
+  const optsEl = document.getElementById('q-opts');
+  optsEl.innerHTML = '';
+
+  q.opts.forEach((text, i) => {
+    const btn = document.createElement('button');
+    btn.className   = 'opt';
+    btn.textContent = text;
+    btn.addEventListener('click', () => onAnswer(i));
+    optsEl.appendChild(btn);
+  });
+}
+
+function onAnswer(picked) {
+  const q    = QUIZ[G.currentQ];
+  const btns = document.querySelectorAll('.opt');
+  btns.forEach(b => b.disabled = true);
+
+  if (picked === q.ans) {
+    btns[picked].classList.add('correct');
+    G.quizScore += 20;
+  } else {
+    btns[picked].classList.add('wrong');
+    btns[q.ans].classList.add('correct');
+  }
+
+  const factEl = document.getElementById('q-fact');
+  factEl.textContent   = q.fact;
+  factEl.style.display = 'block';
+
+  setTimeout(() => {
+    G.currentQ++;
+    if (G.currentQ >= QUIZ.length) showResult();
+    else renderQ();
+  }, 2200);
+}
+
+// ── Result ────────────────────────────
+function showResult() {
+  document.getElementById('q-progress').style.width = '100%';
+
+  const total = G.l1Score + G.quizScore;
+  document.getElementById('r-score').textContent = total;
+
+  let badge, badgeName, msg;
+  if (G.quizScore >= 80) {
+    badge = '🥇'; badgeName = '戒菸小英雄';
+    msg   = '太厲害了！你對戒菸知識非常了解，繼續守護自己和家人的健康！';
+  } else if (G.quizScore >= 40) {
+    badge = '🥈'; badgeName = '健康守護者';
+    msg   = '做得很好！繼續學習戒菸知識，一起為健康努力！';
+  } else {
+    badge = '🥉'; badgeName = '健康新鮮人';
+    msg   = '學習戒菸知識是邁向健康的第一步！有任何問題都可以諮詢衛生所。';
+  }
+
+  document.getElementById('r-badge').textContent      = badge;
+  document.getElementById('r-badge-name').textContent = badgeName;
+  document.getElementById('r-msg').textContent        = msg;
+
+  const now = new Date();
+  document.getElementById('pc-date').textContent =
+    `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
+
+  go('s-result');
+  launchConfetti();
+}
+
+// ── Pledge ────────────────────────────
+function updatePledge() {
+  const name = document.getElementById('pledge-input').value.trim();
+  document.getElementById('pc-name').textContent = name || '（你的名字）';
+}
+
+// ── Confetti ──────────────────────────
+function launchConfetti() {
+  const colors = ['#4caf50','#2196f3','#ff9800','#e91e63','#9c27b0','#ffeb3b'];
+  const wrap   = document.createElement('div');
+  wrap.className = 'confetti-wrap';
+  document.body.appendChild(wrap);
+
+  for (let i = 0; i < 55; i++) {
+    const p = document.createElement('div');
+    p.className = 'cf';
+    const size = 6 + Math.random() * 8;
+    p.style.cssText = [
+      `left:${Math.random() * 100}%`,
+      `width:${size}px`,
+      `height:${size}px`,
+      `background:${colors[Math.floor(Math.random() * colors.length)]}`,
+      `animation-duration:${2 + Math.random() * 1.8}s`,
+      `animation-delay:${Math.random() * .8}s`
+    ].join(';');
+    wrap.appendChild(p);
+  }
+  setTimeout(() => wrap.remove(), 4500);
+}
+
+// ── Restart ───────────────────────────
+function restartGame() {
+  G.l1Score = 0; G.quizScore = 0; G.currentQ = 0;
+  document.getElementById('pledge-input').value = '';
+  document.getElementById('pc-name').textContent = '（你的名字）';
+  go('s-intro');
+}
+</script>
+</body>
+</html>
