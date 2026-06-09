@@ -478,6 +478,7 @@ function go(id) {
 
 // ── Level 1 ───────────────────────────
 function startLevel1() {
+  startSound();          // 使用者第一個真實互動，此處啟動音效最可靠
   G.l1Score   = 0;
   G.timeLeft  = 30;
   clearInterval(G.timerInterval);
@@ -618,6 +619,7 @@ function showResult() {
 
   go('s-result');
   launchConfetti();
+  playVictory();
 }
 
 // ── Pledge ────────────────────────────
@@ -659,14 +661,14 @@ function restartGame() {
 }
 
 // ── Sound System（熄煙音效）─────────────
-const M = { ctx: null, on: false, ambTimer: null };
+const M = { ctx: null, on: false, ambTimer: null, started: false };
 
 function initAudio() {
   if (M.ctx) return;
   M.ctx = new (window.AudioContext || window.webkitAudioContext)();
 }
 
-// 核心：產生熄煙嘶嘶聲（白噪音 + 帶通濾波 + 音量包絡）
+// 核心：白噪音 + 帶通濾波 = 熄煙嘶嘶聲
 function makeSizzle(vol, dur, centerFreq, pitchSweep) {
   if (!M.on || !M.ctx) return;
   const sr  = M.ctx.sampleRate;
@@ -678,13 +680,11 @@ function makeSizzle(vol, dur, centerFreq, pitchSweep) {
   const src = M.ctx.createBufferSource();
   src.buffer = buf;
 
-  // 帶通濾波：模擬煙頭接觸水/空氣的頻率特性
   const bp = M.ctx.createBiquadFilter();
   bp.type = 'bandpass';
   bp.frequency.value = centerFreq;
   bp.Q.value = 1.2;
 
-  // 高頻衰減：模擬熄滅後頻率漸低
   if (pitchSweep) {
     bp.frequency.setValueAtTime(centerFreq, M.ctx.currentTime);
     bp.frequency.exponentialRampToValueAtTime(centerFreq * 0.4, M.ctx.currentTime + dur * 0.8);
@@ -693,8 +693,8 @@ function makeSizzle(vol, dur, centerFreq, pitchSweep) {
   const env = M.ctx.createGain();
   const t   = M.ctx.currentTime;
   env.gain.setValueAtTime(0, t);
-  env.gain.linearRampToValueAtTime(vol, t + 0.015);        // 快速起音
-  env.gain.exponentialRampToValueAtTime(0.001, t + dur);   // 指數衰減
+  env.gain.linearRampToValueAtTime(vol, t + 0.015);
+  env.gain.exponentialRampToValueAtTime(0.001, t + dur);
 
   src.connect(bp);
   bp.connect(env);
@@ -703,27 +703,74 @@ function makeSizzle(vol, dur, centerFreq, pitchSweep) {
   src.stop(t + dur + 0.05);
 }
 
-// 點擊香菸時：較強、帶頻率下掃的熄煙聲
+// 點擊香菸時：強烈帶頻率下掃的熄煙聲
 function playCigHit() {
   makeSizzle(0.55, 0.45, 4800, true);
 }
 
-// 背景環境音：隨機輕微嘶嘶聲，像遠處有煙在悶熄
+// 背景環境音：低頻率隨機嘶嘶聲，像遠處悶熄
 function scheduleAmbient() {
   if (!M.on) return;
-  const vol  = 0.05 + Math.random() * 0.06;
-  const dur  = 0.5  + Math.random() * 0.5;
-  const freq = 2800 + Math.random() * 1400;
-  makeSizzle(vol, dur, freq, false);
+  makeSizzle(
+    0.05 + Math.random() * 0.06,
+    0.5  + Math.random() * 0.5,
+    2800 + Math.random() * 1400,
+    false
+  );
   M.ambTimer = setTimeout(scheduleAmbient, 1500 + Math.random() * 2500);
 }
 
+// 破關音效：上升琶音 C5→E5→G5→C6 + 最後和弦
+function playVictory() {
+  if (!M.ctx) return;
+  const notes = [523.25, 659.25, 783.99, 1046.50];
+
+  // 逐音上升
+  notes.forEach((freq, i) => {
+    setTimeout(() => {
+      const osc = M.ctx.createOscillator();
+      const env = M.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      const t = M.ctx.currentTime;
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.35, t + 0.02);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+      osc.connect(env);
+      env.connect(M.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.5);
+    }, i * 160);
+  });
+
+  // 最後打出和弦
+  setTimeout(() => {
+    [523.25, 659.25, 783.99].forEach(freq => {
+      const osc = M.ctx.createOscillator();
+      const env = M.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = M.ctx.currentTime;
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(0.18, t + 0.03);
+      env.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+      osc.connect(env);
+      env.connect(M.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 1.3);
+    });
+  }, notes.length * 160 + 80);
+}
+
 function startSound() {
+  if (M.started) return;          // 防止重複初始化
+  M.started = true;
   initAudio();
-  if (M.ctx.state === 'suspended') M.ctx.resume();
-  M.on = true;
-  scheduleAmbient();
-  document.getElementById('music-btn').textContent = '🔊';
+  M.ctx.resume().then(() => {
+    M.on = true;
+    scheduleAmbient();
+    document.getElementById('music-btn').textContent = '🔊';
+  });
 }
 
 function stopSound() {
@@ -733,17 +780,13 @@ function stopSound() {
 }
 
 function toggleMusic() {
-  if (M.on) stopSound(); else startSound();
+  if (M.on) {
+    stopSound();
+  } else {
+    M.started = false;             // 允許重新啟動
+    startSound();
+  }
 }
-
-// 第一次觸碰畫面時自動啟動（繞過瀏覽器自動播放限制）
-function autoStartOnce() {
-  startSound();
-  document.removeEventListener('click',      autoStartOnce);
-  document.removeEventListener('touchstart', autoStartOnce);
-}
-document.addEventListener('click',      autoStartOnce, { once: true });
-document.addEventListener('touchstart', autoStartOnce, { once: true });
 </script>
 </body>
 </html>
