@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>戒菸海報｜番路鄉衛生所</title>
+  <style>
+    @page { size: A4 portrait; margin: 0; }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 210mm;
+      height: 297mm;
+      font-family: -apple-system, 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+      background: white;
+      overflow: hidden;
+      color: #1a1a1a;
+    }
+
+    /* ── 版面分區 ── */
+    .poster {
+      width: 210mm;
+      height: 297mm;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 60%, #388e3c 100%);
+      padding: 8mm 10mm 6mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .header-left { color: white; }
+    .header-org  { font-size: 18pt; font-weight: 900; letter-spacing: 2px; }
+    .header-sub  { font-size: 9pt; opacity: .85; margin-top: 2px; letter-spacing: 1px; }
+    .header-icon { font-size: 36pt; }
+
+    /* ── 主視覺 ── */
+    .hero {
+      background: linear-gradient(180deg, #e8f5e9 0%, #f1f8e9 100%);
+      padding: 7mm 10mm 4mm;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .hero-emoji { font-size: 32pt; display: block; margin-bottom: 2mm; }
+    .hero-title {
+      font-size: 28pt; font-weight: 900;
+      color: #1b5e20; line-height: 1.2;
+      letter-spacing: 2px;
+    }
+    .hero-title span { color: #f57c00; }
+    .hero-subtitle {
+      font-size: 11pt; color: #4caf50; font-weight: 700;
+      margin-top: 2mm; letter-spacing: 2px;
+    }
+
+    /* ── QR 區 ── */
+    .qr-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 5mm 10mm 4mm;
+      flex: 1;
+      justify-content: center;
+    }
+    .qr-frame {
+      border: 3pt solid #2e7d32;
+      border-radius: 8mm;
+      padding: 4mm;
+      background: white;
+      box-shadow: 0 2mm 8mm rgba(46,125,50,.15);
+    }
+    .qr-frame img { display: block; width: 58mm; height: 58mm; }
+    .qr-caption {
+      font-size: 10pt; color: #555; margin-top: 3mm;
+      letter-spacing: 1px; text-align: center;
+    }
+    .qr-arrow {
+      font-size: 14pt; margin-bottom: 1mm; color: #2e7d32;
+    }
+
+    /* ── 特色列 ── */
+    .features {
+      display: flex;
+      justify-content: center;
+      gap: 4mm;
+      padding: 3mm 8mm 4mm;
+      flex-shrink: 0;
+    }
+    .feat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5mm;
+      background: white;
+      border: 1.5pt solid #a5d6a7;
+      border-radius: 4mm;
+      padding: 3mm 5mm;
+      min-width: 38mm;
+    }
+    .feat-icon { font-size: 16pt; }
+    .feat-text { font-size: 8pt; font-weight: 700; color: #2e7d32; letter-spacing: 1px; text-align: center; }
+
+    /* ── 分隔線 ── */
+    .divider {
+      border: none; border-top: 1.5pt dashed #a5d6a7;
+      margin: 0 10mm;
+      flex-shrink: 0;
+    }
+
+    /* ── 警語 + 專線 ── */
+    .hotline-section {
+      padding: 4mm 10mm;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .smoking-warning {
+      display: inline-block;
+      background: #fff3e0;
+      border: 1.5pt solid #ff9800;
+      border-radius: 3mm;
+      padding: 2mm 6mm;
+      font-size: 9pt;
+      font-weight: 700;
+      color: #e65100;
+      letter-spacing: 1px;
+      margin-bottom: 3mm;
+    }
+    .hotline-label { font-size: 9pt; color: #555; letter-spacing: 2px; margin-bottom: 1mm; }
+    .hotline-number {
+      font-size: 22pt; font-weight: 900;
+      color: #1b5e20; letter-spacing: 3px;
+    }
+    .hotline-hours { font-size: 8pt; color: #888; margin-top: 1mm; letter-spacing: 1px; }
+
+    /* ── Footer ── */
+    .footer {
+      background: #2e7d32;
+      padding: 4mm 10mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .footer-info { color: white; }
+    .footer-name { font-size: 11pt; font-weight: 800; letter-spacing: 1px; }
+    .footer-addr { font-size: 8pt; opacity: .85; margin-top: 1mm; }
+    .footer-phone {
+      color: white; font-size: 13pt; font-weight: 900;
+      letter-spacing: 2px;
+    }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+<div class="poster">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-org">嘉義縣番路鄉衛生所</div>
+      <div class="header-sub">戒菸衛教宣導活動</div>
+    </div>
+    <div class="header-icon">🫁</div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <span class="hero-emoji">🎮</span>
+    <div class="hero-title">掃碼挑戰<br><span>戒菸小遊戲</span>！</div>
+    <div class="hero-subtitle">✦ 保護你的肺　守護家人的健康 ✦</div>
+  </div>
+
+  <!-- QR Code -->
+  <div class="qr-section">
+    <div class="qr-arrow">📱 用手機掃描下方 QR Code</div>
+    <div class="qr-frame">
+      <img src="data:image/png;base64,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" alt="戒菸遊戲 QR Code" />
+    </div>
+    <div class="qr-caption">免費・免下載・立即開玩！</div>
+  </div>
+
+  <!-- Features -->
+  <div class="features">
+    <div class="feat">
+      <span class="feat-icon">🚬</span>
+      <span class="feat-text">打倒香菸魔</span>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">❓</span>
+      <span class="feat-text">知識問答</span>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">🏆</span>
+      <span class="feat-text">獲得徽章</span>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">📝</span>
+      <span class="feat-text">承諾卡截圖</span>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Hotline -->
+  <div class="hotline-section">
+    <div class="smoking-warning">🚭　吸菸有害健康，戒菸有益身心　🚭</div>
+    <div class="hotline-label">國健署免費戒菸諮詢專線</div>
+    <div class="hotline-number">0800-63-63-63</div>
+    <div class="hotline-hours">週一至週五　09:00 – 21:00　免費撥打</div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-info">
+      <div class="footer-name">番路鄉衛生所　戒菸門診</div>
+      <div class="footer-addr">嘉義縣番路鄉下坑村 2 鄰 60 號</div>
+    </div>
+    <div class="footer-phone">(05) 259-1148</div>
+  </div>
+
+</div>
+</body>
+</html>
