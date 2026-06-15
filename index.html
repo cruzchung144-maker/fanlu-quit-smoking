@@ -115,7 +115,7 @@
     }
     .cig {
       position: absolute; font-size: 2.6rem; cursor: pointer;
-      user-select: none; line-height: 1;
+      user-select: none; line-height: 1; z-index: 1;
       animation: pop-in .2s ease;
       transition: transform .08s;
     }
@@ -124,6 +124,13 @@
 
     @keyframes pop-in  { from{opacity:0;transform:scale(.4)} to{opacity:1;transform:scale(1)} }
     @keyframes pop-out { 0%{opacity:1;transform:scale(1)} 60%{transform:scale(1.5)} 100%{opacity:0;transform:scale(0)} }
+
+    /* ── Lung background (黑肺 → 粉紅健康肺) ── */
+    #lung-bg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none; opacity: .9;
+    }
+    #lung-dirty { transition: opacity .4s ease; }
 
     /* ── Progress ── */
     .progress-wrap { width:100%; max-width:420px; height:8px; background:rgba(0,0,0,.08); border-radius:4px; overflow:hidden; }
@@ -254,11 +261,11 @@
       </div>
       <div class="feature">
         <span class="feature-icon">❓</span>
-        <span class="feature-text"><strong>關卡二</strong>：戒菸知識小挑戰（4 題）</span>
+        <span class="feature-text"><strong>關卡二</strong>：戒菸知識小挑戰（隨機 3 題）</span>
       </div>
       <div class="feature">
         <span class="feature-icon">🏆</span>
-        <span class="feature-text"><strong>完成後</strong>：獲得專屬徽章 + 承諾卡</span>
+        <span class="feature-text"><strong>完成後</strong>：獲得專屬徽章 + 承諾卡，答對全部還能兌換獎品！</span>
       </div>
     </div>
   </div>
@@ -291,7 +298,45 @@
     </div>
   </div>
 
-  <div id="arena"></div>
+  <div id="arena">
+    <svg id="lung-bg" viewBox="0 0 200 205" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <!-- 健康肺（粉紅 + 支氣管樹，底層，初始被黑肺完全遮住） -->
+      <g id="lung-healthy">
+        <path d="M94,60 C78,50 55,52 38,75 C18,100 10,135 14,165 C18,192 45,200 65,185 C85,170 94,130 94,60 Z" fill="#f6cdc4"/>
+        <path d="M106,60 C122,50 145,52 162,75 C182,100 190,135 186,165 C182,192 155,200 135,185 C115,170 106,130 106,60 Z" fill="#f6cdc4"/>
+        <g fill="none" stroke="#e8806a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M80,88 L60,108 M60,108 L45,95 M60,108 L50,127 M60,108 L71,139
+                   M45,95 L35,85 M45,95 L38,106 M50,127 L36,120 M50,127 L45,146
+                   M71,139 L62,158 M71,139 L81,153"/>
+          <path d="M120,88 L140,108 M140,108 L155,95 M140,108 L150,127 M140,108 L129,139
+                   M155,95 L165,85 M155,95 L162,106 M150,127 L164,120 M150,127 L155,146
+                   M129,139 L138,158 M129,139 L119,153"/>
+        </g>
+        <rect x="88" y="2" width="24" height="66" rx="12" fill="#d96a56"/>
+      </g>
+      <!-- 黑掉的肺（深色，遮在上層，消滅香菸越多越透明，逐漸顯出粉紅肺與支氣管） -->
+      <g id="lung-dirty">
+        <path d="M94,60 C78,50 55,52 38,75 C18,100 10,135 14,165 C18,192 45,200 65,185 C85,170 94,130 94,60 Z" fill="#3a3a3a"/>
+        <path d="M106,60 C122,50 145,52 162,75 C182,100 190,135 186,165 C182,192 155,200 135,185 C115,170 106,130 106,60 Z" fill="#3a3a3a"/>
+        <circle cx="45"  cy="112" r="13" fill="#262626"/>
+        <circle cx="70"  cy="160" r="11" fill="#222"/>
+        <circle cx="30"  cy="150" r="9"  fill="#2a2a2a"/>
+        <circle cx="155" cy="112" r="13" fill="#262626"/>
+        <circle cx="130" cy="160" r="11" fill="#222"/>
+        <circle cx="170" cy="150" r="9"  fill="#2a2a2a"/>
+        <rect x="88" y="2" width="24" height="66" rx="12" fill="#3a3a3a"/>
+      </g>
+      <!-- 氣管環狀切割線（一直顯示在最上層） -->
+      <g stroke="#fff" stroke-width="2.5">
+        <line x1="87" y1="10" x2="113" y2="10"/>
+        <line x1="87" y1="19" x2="113" y2="19"/>
+        <line x1="87" y1="28" x2="113" y2="28"/>
+        <line x1="87" y1="37" x2="113" y2="37"/>
+        <line x1="87" y1="46" x2="113" y2="46"/>
+        <line x1="87" y1="55" x2="113" y2="55"/>
+      </g>
+    </svg>
+  </div>
 
   <p style="font-size:.85rem;color:var(--gray);text-align:center">
     💡 快速點擊消滅更多香菸！
@@ -369,6 +414,24 @@
     <div class="score-num"   id="r-score">0</div>
     <div class="score-sub">總分</div>
     <p style="font-size:.9rem;color:var(--gray);margin-top:10px;line-height:1.6" id="r-msg"></p>
+  </div>
+
+  <!-- 兌獎憑證（答對全部題目才顯示） -->
+  <div class="card" id="redeem-card" style="max-width:420px;display:none">
+    <div class="card-title" style="font-size:1.1rem">🎁 兌獎資格達成！</div>
+    <div class="card-sub">請將本畫面截圖，至工作人員處兌換宣導獎品</div>
+    <div class="pledge-card">
+      <div class="pc-org">兌獎憑證</div>
+      <div class="pc-title">戒菸小英雄　滿分通關</div>
+      <div class="pc-name" id="redeem-code" style="font-size:1.3rem"></div>
+      <div class="pc-date" id="redeem-date"></div>
+    </div>
+  </div>
+
+  <!-- 未達兌獎門檻提示 -->
+  <div class="card" id="noredeem-card" style="max-width:420px;display:none;text-align:center">
+    <div class="card-title" style="font-size:1.1rem">💪 再接再厲！</div>
+    <div class="card-sub">答對全部 3 題、獲得「戒菸小英雄」徽章<br>即可向工作人員兌換獎品</div>
   </div>
 
   <!-- 承諾卡 -->
@@ -466,8 +529,30 @@ const QUIZ = [
     opts: ['風險完全消除', '風險降低一半', '沒有明顯改變'],
     ans: 1,
     fact: '✅ 正確！戒菸 1 年後冠心病風險降低約 50%，越早開始越好！'
+  },
+  {
+    q:  '二手菸主要會增加家人罹患哪些疾病的風險？',
+    opts: ['氣喘、肺癌', '近視、散光', '蛀牙、口臭'],
+    ans: 0,
+    fact: '✅ 正確！二手菸會增加家人氣喘、肺癌與心血管疾病的風險，戒菸也是保護家人！'
+  },
+  {
+    q:  '戒菸後，肺功能與咳痰症狀大約多久會開始明顯改善？',
+    opts: ['1～9 個月', '10 年以上', '永遠不會改善'],
+    ans: 0,
+    fact: '✅ 正確！戒菸後 1～9 個月內，肺功能會逐漸恢復，咳嗽、痰多的情況也會明顯減少。'
   }
 ];
+
+// 從題庫隨機洗牌，回傳新陣列
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 // ── Navigation ────────────────────────
 function go(id) {
@@ -488,10 +573,11 @@ function startLevel1() {
   const tv    = document.getElementById('l1-timer');
   const sv    = document.getElementById('l1-score');
 
-  arena.innerHTML = '';
+  arena.querySelectorAll('.cig').forEach(c => c.remove());
   tv.textContent  = '30';
   tv.classList.remove('warn');
   sv.textContent  = '0';
+  updateLungVisual(0);
 
   G.spawnInterval = setInterval(spawnCig, 900);
 
@@ -502,11 +588,18 @@ function startLevel1() {
     if (G.timeLeft <= 0) {
       clearInterval(G.timerInterval);
       clearInterval(G.spawnInterval);
-      arena.innerHTML = '';
+      arena.querySelectorAll('.cig').forEach(c => c.remove());
       document.getElementById('fact-count').textContent = G.l1Score;
       go('s-fact');
     }
   }, 1000);
+}
+
+// 隨消滅香菸數量，黑掉的肺逐漸轉為健康粉紅色
+function updateLungVisual(score) {
+  const maxScore = 15;
+  const dirty = document.getElementById('lung-dirty');
+  if (dirty) dirty.style.opacity = Math.max(0, 1 - score / maxScore);
 }
 
 function spawnCig() {
@@ -527,6 +620,7 @@ function spawnCig() {
     el.classList.add('hit');
     G.l1Score++;
     document.getElementById('l1-score').textContent = G.l1Score;
+    updateLungVisual(G.l1Score);
     playCigHit();
     setTimeout(() => el.remove(), 230);
   });
@@ -537,14 +631,15 @@ function spawnCig() {
 
 // ── Quiz ──────────────────────────────
 function startQuiz() {
-  G.quizScore = 0;
-  G.currentQ  = 0;
+  G.quizScore  = 0;
+  G.currentQ   = 0;
+  G.activeQuiz = shuffleArray(QUIZ).slice(0, 3);
   renderQ();
 }
 
 function renderQ() {
-  const q   = QUIZ[G.currentQ];
-  const tot = QUIZ.length;
+  const q   = G.activeQuiz[G.currentQ];
+  const tot = G.activeQuiz.length;
 
   document.getElementById('q-counter').textContent  = `第 ${G.currentQ + 1} 題 / 共 ${tot} 題`;
   document.getElementById('q-progress').style.width = `${(G.currentQ / tot) * 100}%`;
@@ -567,7 +662,7 @@ function renderQ() {
 }
 
 function onAnswer(picked) {
-  const q    = QUIZ[G.currentQ];
+  const q    = G.activeQuiz[G.currentQ];
   const btns = document.querySelectorAll('.opt');
   btns.forEach(b => b.disabled = true);
 
@@ -585,7 +680,7 @@ function onAnswer(picked) {
 
   setTimeout(() => {
     G.currentQ++;
-    if (G.currentQ >= QUIZ.length) showResult();
+    if (G.currentQ >= G.activeQuiz.length) showResult();
     else renderQ();
   }, 2200);
 }
@@ -598,15 +693,15 @@ function showResult() {
   document.getElementById('r-score').textContent = total;
 
   let badge, badgeName, msg;
-  if (G.quizScore >= 80) {
+  if (G.quizScore >= 60) {
     badge = '🥇'; badgeName = '戒菸小英雄';
-    msg   = '太厲害了！你對戒菸知識非常了解，繼續守護自己和家人的健康！';
+    msg   = '太厲害了！全部答對，快截圖此畫面向工作人員兌換獎品吧！';
   } else if (G.quizScore >= 40) {
     badge = '🥈'; badgeName = '健康守護者';
-    msg   = '做得很好！繼續學習戒菸知識，一起為健康努力！';
+    msg   = '做得很好！再玩一次答對全部題目，就能拿到兌獎資格！';
   } else {
     badge = '🥉'; badgeName = '健康新鮮人';
-    msg   = '學習戒菸知識是邁向健康的第一步！有任何問題都可以諮詢衛生所。';
+    msg   = '學習戒菸知識是邁向健康的第一步！再玩一次挑戰滿分兌換獎品吧。';
   }
 
   document.getElementById('r-badge').textContent      = badge;
@@ -614,8 +709,22 @@ function showResult() {
   document.getElementById('r-msg').textContent        = msg;
 
   const now = new Date();
-  document.getElementById('pc-date').textContent =
-    `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
+  const dateStr = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
+  document.getElementById('pc-date').textContent = dateStr;
+
+  // 兌獎憑證：答對全部 3 題（滿分 60）才顯示
+  const redeemCard   = document.getElementById('redeem-card');
+  const noRedeemCard = document.getElementById('noredeem-card');
+  if (G.quizScore >= 60) {
+    const code = `QS${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    document.getElementById('redeem-code').textContent = code;
+    document.getElementById('redeem-date').textContent = dateStr;
+    redeemCard.style.display   = 'block';
+    noRedeemCard.style.display = 'none';
+  } else {
+    redeemCard.style.display   = 'none';
+    noRedeemCard.style.display = 'block';
+  }
 
   go('s-result');
   launchConfetti();
